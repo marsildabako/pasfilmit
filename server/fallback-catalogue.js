@@ -1,0 +1,29 @@
+/**
+ * fallback-catalogue.js — Built-in movie catalogue used when no TMDB API key
+ * is configured. Enables the reviewer to test the full application without
+ * needing to register for a third-party service.
+ *
+ * Poster paths point to placeholder images embedded server-side.
+ */
+module.exports = [
+  { id: 550,     title: "Fight Club",              release_year: 1999, poster_path: "/placeholder/fightclub.svg",   overview: "An insomniac office worker crosses paths with a devil-may-care soapmaker and forms an underground fight club.", runtime: 139 },
+  { id: 13,      title: "Forrest Gump",            release_year: 1994, poster_path: "/placeholder/forrestgump.svg", overview: "The presidencies of Kennedy and Johnson, Vietnam, and other historical events unfold from the perspective of an Alabama man.", runtime: 142 },
+  { id: 155,     title: "The Dark Knight",         release_year: 2008, poster_path: "/placeholder/darkknight.svg",  overview: "Batman raises the stakes in his war on crime with the help of Lt. Jim Gordon and DA Harvey Dent.", runtime: 152 },
+  { id: 27205,   title: "Inception",               release_year: 2010, poster_path: "/placeholder/inception.svg",   overview: "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea.", runtime: 148 },
+  { id: 680,     title: "Pulp Fiction",            release_year: 1994, poster_path: "/placeholder/pulpfiction.svg", overview: "The lives of two mob hitmen, a boxer, and a pair of diner bandits intertwine in four tales of violence and redemption.", runtime: 154 },
+  { id: 157336,  title: "Interstellar",            release_year: 2014, poster_path: "/placeholder/interstellar.svg", overview: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.", runtime: 169 },
+  { id: 372058,  title: "Your Name",               release_year: 2016, poster_path: "/placeholder/yourname.svg",    overview: "Two strangers find themselves linked in a bizarre way. When a connection forms, will distance be the only thing to keep them apart?", runtime: 106 },
+  { id: 496243,  title: "Parasite",                release_year: 2019, poster_path: "/placeholder/parasite.svg",    overview: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.", runtime: 132 },
+  { id: 12,      title: "Finding Nemo",            release_year: 2003, poster_path: "/placeholder/findingnemo.svg", overview: "After his son is captured, a timid clownfish sets out on a journey to bring him home.", runtime: 100 },
+  { id: 274,     title: "The Silence of the Lambs", release_year: 1991, poster_path: "/placeholder/silence.svg",    overview: "A young FBI cadet must receive the help of an incarcerated cannibal killer to catch another serial killer.", runtime: 118 },
+  { id: 105,     title: "Back to the Future",       release_year: 1985, poster_path: "/placeholder/bttf.svg",       overview: "A teenager is accidentally sent thirty years into the past in a time-traveling DeLorean.", runtime: 116 },
+  { id: 429,     title: "The Good, the Bad and the Ugly", release_year: 1966, poster_path: "/placeholder/gbu.svg", overview: "A bounty-hunting scam joins two men in an uneasy alliance against a third in a race to find a fortune in gold.", runtime: 178 },
+  { id: 4935,    title: "Howl's Moving Castle",    release_year: 2004, poster_path: "/placeholder/howl.svg",        overview: "When an unconfident young woman is cursed with an old body by a spiteful witch, her only chance of breaking the spell lies with a self-indulgent yet insecure young wizard.", runtime: 119 },
+  { id: 129,     title: "Spirited Away",           release_year: 2001, poster_path: "/placeholder/spirited.svg",    overview: "During her family's move to the suburbs, a sullen 10-year-old girl wanders into a world ruled by gods, witches, and spirits.", runtime: 125 },
+  { id: 508943,  title: "Luca",                    release_year: 2021, poster_path: "/placeholder/luca.svg",        overview: "On the Italian Riviera, an unlikely but strong friendship grows between a human being and a sea monster disguised as a human.", runtime: 95 },
+  { id: 335984,  title: "Blade Runner 2049",       release_year: 2017, poster_path: "/placeholder/br2049.svg",      overview: "Young Blade Runner K's discovery of a long-buried secret leads him to track down former Blade Runner Rick Deckard.", runtime: 164 },
+  { id: 122,     title: "The Lord of the Rings: The Return of the King", release_year: 2003, poster_path: "/placeholder/lotr.svg", overview: "Gandalf and Aragorn lead the World of Men against Sauron's army to draw his gaze from Frodo and Sam.", runtime: 201 },
+  { id: 76341,   title: "Mad Max: Fury Road",      release_year: 2015, poster_path: "/placeholder/madmax.svg",      overview: "In a post-apocalyptic wasteland, a woman rebels against a tyrannical ruler in search for her homeland.", runtime: 120 },
+  { id: 313369,  title: "La La Land",              release_year: 2016, poster_path: "/placeholder/lalaland.svg",    overview: "While navigating their careers in Los Angeles, a pianist and an actress fall in love while attempting to reconcile their aspirations for the future.", runtime: 128 },
+  { id: 245891,  title: "John Wick",               release_year: 2014, poster_path: "/placeholder/johnwick.svg",    overview: "An ex-hit-man comes out of retirement to track down the gangsters that killed his dog.", runtime: 101 },
+];

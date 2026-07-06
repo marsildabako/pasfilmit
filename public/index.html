@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PasFilmit · A Personal Cinema Diary</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+  <!-- ============================================================
+       AUTH VIEW (shown when not logged in)
+  ============================================================ -->
+  <section id="view-auth" class="view view-auth">
+    <div class="auth-card">
+      <div class="brand">
+        <span class="brand-mark">▶</span>
+        <h1>PasFilmit</h1>
+      </div>
+      <p class="tagline">Log every film you watch — and how it made you feel.</p>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="login">Log in</button>
+        <button class="tab-btn" data-tab="register">Create account</button>
+      </div>
+
+      <form id="form-login" class="auth-form">
+        <label>Username <input type="text" name="username" required autocomplete="username"></label>
+        <label>Password <input type="password" name="password" required autocomplete="current-password"></label>
+        <button type="submit" class="btn-primary">Enter diary</button>
+        <p class="form-error" id="login-error"></p>
+      </form>
+
+      <form id="form-register" class="auth-form hidden">
+        <label>Username <input type="text" name="username" required autocomplete="username"></label>
+        <label>Password (min. 6 characters) <input type="password" name="password" required minlength="6" autocomplete="new-password"></label>
+        <button type="submit" class="btn-primary">Create account</button>
+        <p class="form-error" id="register-error"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       APP VIEW (shown when logged in)
+  ============================================================ -->
+  <section id="view-app" class="view view-app hidden">
+    <header class="topbar">
+      <div class="brand brand-sm">
+        <span class="brand-mark">▶</span>
+        <span class="brand-name">PasFilmit</span>
+      </div>
+      <nav class="topnav">
+        <button class="nav-btn active" data-page="diary">Diary</button>
+        <button class="nav-btn" data-page="stats">Stats</button>
+      </nav>
+      <div class="user-menu">
+        <span id="user-label"></span>
+        <button id="btn-logout" class="btn-ghost">Log out</button>
+      </div>
+    </header>
+
+    <!-- ==================== DIARY PAGE ==================== -->
+    <main id="page-diary" class="page">
+      <div class="page-header">
+        <h2>Your diary</h2>
+        <button id="btn-new-entry" class="btn-primary">＋ Log a film</button>
+      </div>
+
+      <div class="filter-bar">
+        <label for="filter-mood">Filter by mood:</label>
+        <select id="filter-mood"><option value="">All moods</option></select>
+      </div>
+
+      <div id="entries-list" class="entries-list">
+        <p class="empty-state">Loading…</p>
+      </div>
+    </main>
+
+    <!-- ==================== STATS PAGE ==================== -->
+    <main id="page-stats" class="page hidden">
+      <div class="page-header"><h2>Your viewing patterns</h2></div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total films logged</div>
+          <div class="stat-value" id="stat-total">–</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Average rating</div>
+          <div class="stat-value" id="stat-avg">–</div>
+        </div>
+      </div>
+
+      <div class="stat-section">
+        <h3>Mood distribution</h3>
+        <div id="mood-chart" class="mood-chart"></div>
+      </div>
+
+      <div class="stat-section">
+        <h3>Films per month</h3>
+        <div id="month-chart" class="month-chart"></div>
+      </div>
+    </main>
+  </section>
+
+  <!-- ============================================================
+       ENTRY MODAL (create + edit)
+  ============================================================ -->
+  <div id="modal-entry" class="modal hidden">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-panel">
+      <header class="modal-header">
+        <h3 id="modal-title">Log a film</h3>
+        <button class="modal-close" data-close aria-label="Close">×</button>
+      </header>
+
+      <div class="modal-body">
+        <!-- Step 1: search -->
+        <div id="step-search" class="modal-step">
+          <label>Search for a film
+            <input type="text" id="movie-search-input" placeholder="Type a title…" autocomplete="off">
+          </label>
+          <div id="search-results" class="search-results"></div>
+        </div>
+
+        <!-- Step 2: entry form -->
+        <form id="entry-form" class="modal-step hidden">
+          <div class="selected-movie">
+            <img id="sel-poster" alt="">
+            <div>
+              <h4 id="sel-title"></h4>
+              <p id="sel-meta"></p>
+              <button type="button" id="btn-change-movie" class="btn-ghost">Change film</button>
+            </div>
+          </div>
+
+          <label>When did you watch it?
+            <input type="date" name="watched_on" required>
+          </label>
+
+          <fieldset class="rating-field">
+            <legend>Rating</legend>
+            <div class="star-input" role="radiogroup" aria-label="Rating">
+              <!-- populated by JS -->
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Mood</legend>
+            <div id="mood-picker" class="mood-picker"></div>
+          </fieldset>
+
+          <label>Your reflection <span class="hint">(optional)</span>
+            <textarea name="reflection" rows="4" placeholder="What stuck with you?"></textarea>
+          </label>
+
+          <p class="form-error" id="entry-error"></p>
+          <div class="modal-actions">
+            <button type="button" class="btn-ghost" data-close>Cancel</button>
+            <button type="submit" class="btn-primary">Save entry</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
