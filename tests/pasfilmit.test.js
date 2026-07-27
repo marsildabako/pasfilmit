@@ -1,27 +1,22 @@
-/**
- * pasfilmit.test.js — Integration tests for the PasFilmit HTTP API.
- *
- * Uses supertest to exercise the Express app end-to-end against a
- * temporary SQLite file, verifying auth, CRUD, filter, and stats routes.
- */
-const fs   = require("fs");
+// Integration tests. Uses supertest so we don't need to actually
+// open a port. Each `agent` keeps its own cookie jar so we can test
+// authenticated flows properly.
+//
+// Runs against a real (temp) sqlite db. Should probably use an
+// in-memory db and reset between tests but this is simpler and works.
+
+const fs = require("fs");
 const path = require("path");
 const request = require("supertest");
 
-const TMP_DB = path.join(__dirname, "..", "data", "test-pasfilmit.db");
 process.env.SESSION_SECRET = "test-secret";
-delete process.env.TMDB_API_KEY; // force fallback catalogue
+delete process.env.TMDB_API_KEY;  // force the fallback catalogue
 
-// Route the DB to a temp file for isolation
+// nuke any old db before we start
+const dbFile = path.join(__dirname, "..", "data", "pasfilmit.db");
+if (fs.existsSync(dbFile)) fs.unlinkSync(dbFile);
+
 const dbModule = require("../server/db");
-const origPath = require.cache[require.resolve("../server/db")].exports;
-// The db module bakes the DB_PATH at load time; simplest reset is deleting the file.
-if (fs.existsSync(TMP_DB)) fs.unlinkSync(TMP_DB);
-if (fs.existsSync(path.join(__dirname, "..", "data", "pasfilmit.db"))) {
-  // don't overwrite production DB; tests use the default path but we ensure fresh
-  fs.unlinkSync(path.join(__dirname, "..", "data", "pasfilmit.db"));
-}
-
 const buildApp = require("../server/app");
 
 let app;
@@ -34,8 +29,7 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
-  const p = path.join(__dirname, "..", "data", "pasfilmit.db");
-  if (fs.existsSync(p)) fs.unlinkSync(p);
+  if (fs.existsSync(dbFile)) fs.unlinkSync(dbFile);
 });
 
 describe("Auth flow", () => {
@@ -65,6 +59,7 @@ describe("Auth flow", () => {
   });
 
   test("logout ends session", async () => {
+    // use a fresh agent so we don't kill the main test session
     const fresh = request.agent(app);
     await fresh.post("/api/auth/register").send({ username: "temp", password: "temppass" });
     await fresh.post("/api/auth/logout");
@@ -112,7 +107,7 @@ describe("Diary entries CRUD", () => {
 
   test("create entry", async () => {
     const res = await agent.post("/api/entries").send({
-      movie_id: 27205, // Inception (fallback)
+      movie_id: 27205,  // Inception, from the fallback catalogue
       watched_on: "2026-06-01",
       rating: 5,
       mood_id: 1,
@@ -147,7 +142,7 @@ describe("Diary entries CRUD", () => {
     expect(updated.rating).toBe(4);
   });
 
-  test("rating outside 1–5 is rejected", async () => {
+  test("rating outside 1-5 is rejected", async () => {
     const res = await agent.post("/api/entries").send({
       movie_id: 550, watched_on: "2026-06-02", rating: 9, mood_id: 1,
     });
@@ -169,17 +164,17 @@ describe("Diary entries CRUD", () => {
 
 describe("Stats aggregation", () => {
   beforeAll(async () => {
-    // seed some entries so stats have data
+    // seed a few entries so the aggregate queries have something to work with
     await agent.post("/api/entries").send({
-      movie_id: 13, watched_on: "2026-05-10", rating: 4, mood_id: 4, // Nostalgic
+      movie_id: 13, watched_on: "2026-05-10", rating: 4, mood_id: 4,
       reflection: "",
     });
     await agent.post("/api/entries").send({
-      movie_id: 155, watched_on: "2026-05-20", rating: 5, mood_id: 5, // Thrilled
+      movie_id: 155, watched_on: "2026-05-20", rating: 5, mood_id: 5,
       reflection: "",
     });
     await agent.post("/api/entries").send({
-      movie_id: 496243, watched_on: "2026-06-15", rating: 5, mood_id: 2, // Unsettled
+      movie_id: 496243, watched_on: "2026-06-15", rating: 5, mood_id: 2,
       reflection: "",
     });
   });

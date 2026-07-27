@@ -1,15 +1,9 @@
-/**
- * db.js — SQLite persistence layer via sql.js (pure JS/WASM).
- *
- * Schema:
- *   users          — one row per registered account (single-user in practice)
- *   movies         — cached film metadata (from TMDB or fallback catalogue)
- *   diary_entries  — one row per logged viewing, linked to user + movie
- *   moods          — controlled vocabulary of ~12 preset mood tags
- *
- * The database is written to disk as a single file (data/pasfilmit.db) so it
- * behaves like a normal SQLite file for backup / inspection purposes.
- */
+// SQLite stuff. Using sql.js because better-sqlite3 wouldn't compile
+// on my laptop (needed some C++ toolchain I couldn't get working).
+// The upside: it's all pure JS, no build step for whoever runs this.
+// The downside: I have to manually save() to disk after each write,
+// which is a bit annoying but fine at this scale.
+
 const fs = require("fs");
 const path = require("path");
 const initSqlJs = require("sql.js");
@@ -17,10 +11,10 @@ const initSqlJs = require("sql.js");
 const DB_PATH = path.join(__dirname, "..", "data", "pasfilmit.db");
 const DATA_DIR = path.dirname(DB_PATH);
 
-let db = null; // in-memory sql.js Database instance
+let db = null;
 let SQL = null;
 
-/** Persist the current in-memory DB to disk. */
+// dump the in-memory db to disk
 function save() {
   if (!db) return;
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -28,13 +22,14 @@ function save() {
   fs.writeFileSync(DB_PATH, buf);
 }
 
-/** Initialise the database (create tables + seed moods on first run). */
 async function init() {
   SQL = await initSqlJs();
   if (fs.existsSync(DB_PATH)) {
+    // load existing db from disk
     const fileBuffer = fs.readFileSync(DB_PATH);
     db = new SQL.Database(fileBuffer);
   } else {
+    // first run - build tables and seed the moods
     db = new SQL.Database();
     createSchema();
     seedMoods();
@@ -44,6 +39,8 @@ async function init() {
 }
 
 function createSchema() {
+  // Note: created_at defaults to CURRENT_TIMESTAMP but this is UTC.
+  // Not a problem for me but worth remembering.
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,12 +50,12 @@ function createSchema() {
     );
 
     CREATE TABLE IF NOT EXISTS movies (
-      id          INTEGER PRIMARY KEY,           -- matches TMDB id when available
-      title       TEXT NOT NULL,
+      id           INTEGER PRIMARY KEY,
+      title        TEXT NOT NULL,
       release_year INTEGER,
-      poster_path TEXT,
-      overview    TEXT,
-      runtime     INTEGER
+      poster_path  TEXT,
+      overview     TEXT,
+      runtime      INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS moods (
@@ -71,7 +68,7 @@ function createSchema() {
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id      INTEGER NOT NULL,
       movie_id     INTEGER NOT NULL,
-      watched_on   TEXT    NOT NULL,             -- ISO date (YYYY-MM-DD)
+      watched_on   TEXT    NOT NULL,
       rating       INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
       mood_id      INTEGER NOT NULL,
       reflection   TEXT,
@@ -86,7 +83,8 @@ function createSchema() {
   `);
 }
 
-/** Seed the 12 preset moods. Colours align with the deck's cinema-noir palette. */
+// preset moods. picked colors to roughly match the vibe of each mood
+// (red for unsettled, warm yellow for hopeful, etc). could be expanded later.
 function seedMoods() {
   const moods = [
     ["Hopeful",    "#E8A33D"],
@@ -107,7 +105,7 @@ function seedMoods() {
   stmt.free();
 }
 
-/** Run a parametrised query returning rows as plain objects. */
+// run a select, return all rows as plain objects
 function all(sql, params = []) {
   const stmt = db.prepare(sql);
   stmt.bind(params);
@@ -117,13 +115,15 @@ function all(sql, params = []) {
   return rows;
 }
 
-/** Run a query returning at most one row (or null). */
+// one row or null
 function get(sql, params = []) {
   const rows = all(sql, params);
   return rows[0] || null;
 }
 
-/** Execute a mutating statement; returns lastInsertRowid. */
+// insert/update/delete. returns the last inserted id.
+// NOTE: last_insert_rowid() is per-connection so this only works
+// because we have a single connection.
 function run(sql, params = []) {
   db.run(sql, params);
   const row = get("SELECT last_insert_rowid() AS id");

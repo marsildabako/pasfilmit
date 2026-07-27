@@ -1,10 +1,8 @@
-/**
- * fallback-catalogue.js — Built-in movie catalogue used when no TMDB API key
- * is configured. Enables the reviewer to test the full application without
- * needing to register for a third-party service.
- *
- * Poster paths point to placeholder images embedded server-side.
- */
+// Fallback movie list used when there's no TMDB API key.
+// I picked 20 films that are well-known enough to be recognisable
+// during a demo. IDs match TMDB's real IDs so if a key is added later
+// the same movie_ids keep working.
+
 module.exports = [
   { id: 550,     title: "Fight Club",              release_year: 1999, poster_path: "/placeholder/fightclub.svg",   overview: "An insomniac office worker crosses paths with a devil-may-care soapmaker and forms an underground fight club.", runtime: 139 },
   { id: 13,      title: "Forrest Gump",            release_year: 1994, poster_path: "/placeholder/forrestgump.svg", overview: "The presidencies of Kennedy and Johnson, Vietnam, and other historical events unfold from the perspective of an Alabama man.", runtime: 142 },

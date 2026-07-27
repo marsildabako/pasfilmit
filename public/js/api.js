@@ -1,9 +1,6 @@
-/**
- * api.js — Thin wrapper around the backend REST API.
- *
- * All calls include `credentials: "include"` so the session cookie flows
- * correctly, and JSON responses are unwrapped or the error message thrown.
- */
+// thin wrapper around fetch. every call sends the session cookie
+// (credentials: "include") and parses JSON. throws on non-2xx.
+
 const api = (() => {
   async function req(method, url, body) {
     const opts = {

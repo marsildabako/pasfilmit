@@ -3,21 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PasFilmit · A Personal Cinema Diary</title>
+  <title>PasFilmit</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
 
-  <!-- ============================================================
-       AUTH VIEW (shown when not logged in)
-  ============================================================ -->
+  <!-- shown when logged out -->
   <section id="view-auth" class="view view-auth">
     <div class="auth-card">
       <div class="brand">
-        <span class="brand-mark">▶</span>
+        <span class="brand-mark">&#9654;</span>
         <h1>PasFilmit</h1>
       </div>
-      <p class="tagline">Log every film you watch — and how it made you feel.</p>
+      <p class="tagline">Log every film you watch - and how it made you feel.</p>
 
       <div class="tabs">
         <button class="tab-btn active" data-tab="login">Log in</button>
@@ -40,13 +38,11 @@
     </div>
   </section>
 
-  <!-- ============================================================
-       APP VIEW (shown when logged in)
-  ============================================================ -->
+  <!-- shown when logged in -->
   <section id="view-app" class="view view-app hidden">
     <header class="topbar">
       <div class="brand brand-sm">
-        <span class="brand-mark">▶</span>
+        <span class="brand-mark">&#9654;</span>
         <span class="brand-name">PasFilmit</span>
       </div>
       <nav class="topnav">
@@ -59,11 +55,11 @@
       </div>
     </header>
 
-    <!-- ==================== DIARY PAGE ==================== -->
+    <!-- diary page -->
     <main id="page-diary" class="page">
       <div class="page-header">
         <h2>Your diary</h2>
-        <button id="btn-new-entry" class="btn-primary">＋ Log a film</button>
+        <button id="btn-new-entry" class="btn-primary">+ Log a film</button>
       </div>
 
       <div class="filter-bar">
@@ -72,22 +68,22 @@
       </div>
 
       <div id="entries-list" class="entries-list">
-        <p class="empty-state">Loading…</p>
+        <p class="empty-state">Loading...</p>
       </div>
     </main>
 
-    <!-- ==================== STATS PAGE ==================== -->
+    <!-- stats page -->
     <main id="page-stats" class="page hidden">
       <div class="page-header"><h2>Your viewing patterns</h2></div>
 
       <div class="stat-grid">
         <div class="stat-card">
           <div class="stat-label">Total films logged</div>
-          <div class="stat-value" id="stat-total">–</div>
+          <div class="stat-value" id="stat-total">-</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Average rating</div>
-          <div class="stat-value" id="stat-avg">–</div>
+          <div class="stat-value" id="stat-avg">-</div>
         </div>
       </div>
 
@@ -103,27 +99,25 @@
     </main>
   </section>
 
-  <!-- ============================================================
-       ENTRY MODAL (create + edit)
-  ============================================================ -->
+  <!-- create/edit entry modal -->
   <div id="modal-entry" class="modal hidden">
     <div class="modal-backdrop" data-close></div>
     <div class="modal-panel">
       <header class="modal-header">
         <h3 id="modal-title">Log a film</h3>
-        <button class="modal-close" data-close aria-label="Close">×</button>
+        <button class="modal-close" data-close aria-label="Close">&times;</button>
       </header>
 
       <div class="modal-body">
-        <!-- Step 1: search -->
+        <!-- step 1: pick a movie -->
         <div id="step-search" class="modal-step">
           <label>Search for a film
-            <input type="text" id="movie-search-input" placeholder="Type a title…" autocomplete="off">
+            <input type="text" id="movie-search-input" placeholder="Type a title..." autocomplete="off">
           </label>
           <div id="search-results" class="search-results"></div>
         </div>
 
-        <!-- Step 2: entry form -->
+        <!-- step 2: fill out the entry -->
         <form id="entry-form" class="modal-step hidden">
           <div class="selected-movie">
             <img id="sel-poster" alt="">
@@ -141,7 +135,7 @@
           <fieldset class="rating-field">
             <legend>Rating</legend>
             <div class="star-input" role="radiogroup" aria-label="Rating">
-              <!-- populated by JS -->
+              <!-- filled by JS -->
             </div>
           </fieldset>
 

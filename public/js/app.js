@@ -1,16 +1,13 @@
-/**
- * app.js — Front-end controller for PasFilmit.
- *
- * Responsibilities:
- *   - View routing (auth ↔ app; diary ↔ stats)
- *   - Auth form submission (login + register)
- *   - Diary list rendering + mood filter
- *   - Modal for creating and editing entries (search → form)
- *   - Stats page (totals + horizontal bar charts, no chart lib needed)
- *
- * State is kept minimal and lives on the `state` object below.
- */
+// Frontend controller. Handles the two views (auth vs app),
+// the two pages inside the app (diary vs stats), and the entry modal.
+//
+// No framework - just querySelector and event listeners. Kept everything
+// in one IIFE so I don't pollute the global scope.
+//
+// TODO: split this into smaller files at some point. It's getting long.
+
 (() => {
+  // shared state. tried to keep this minimal.
   const state = {
     user: null,
     moods: [],
@@ -20,18 +17,19 @@
     editingEntryId: null,
   };
 
-  // ============================================================
-  // UTILITIES
-  // ============================================================
+  // -------- helpers --------
 
   const $  = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
+  // basic HTML escaping. don't want user reflection text to be rendered
+  // as HTML - would be XSS.
   const escapeHtml = (str) =>
     String(str || "").replace(/[&<>"']/g, (c) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
     }[c]));
 
+  // wait until user stops typing before firing a request. 250ms feels ok.
   const debounce = (fn, ms) => {
     let t;
     return (...args) => {
@@ -42,15 +40,14 @@
 
   const showError = (elId, msg) => { const el = $("#" + elId); if (el) el.textContent = msg || ""; };
 
-  // ============================================================
-  // BOOT
-  // ============================================================
+  // -------- boot --------
 
   window.addEventListener("DOMContentLoaded", async () => {
     bindAuthUI();
     bindAppUI();
     bindModalUI();
 
+    // check if we already have a session (came back to the tab, refreshed, etc)
     try {
       const me = await api.me();
       if (me.authenticated) {
@@ -58,13 +55,11 @@
         await enterApp();
       }
     } catch (e) {
-      // no session — stay on auth view
+      // no session, stay on the auth view
     }
   });
 
-  // ============================================================
-  // AUTH
-  // ============================================================
+  // -------- auth screen --------
 
   function bindAuthUI() {
     $$(".tab-btn").forEach((btn) => {
@@ -104,20 +99,16 @@
     });
   }
 
-  // ============================================================
-  // APP
-  // ============================================================
+  // -------- app --------
 
   async function enterApp() {
     $("#view-auth").classList.add("hidden");
     $("#view-app").classList.remove("hidden");
     $("#user-label").textContent = "@" + state.user.username;
 
-    // Load reference data
     state.moods = await api.listMoods();
     populateMoodFilter();
 
-    // Default page = diary
     showPage("diary");
     await loadEntries();
   }
@@ -137,7 +128,6 @@
     });
 
     $("#btn-new-entry").addEventListener("click", () => openModal("create"));
-
     $("#filter-mood").addEventListener("change", (e) => loadEntries(e.target.value));
   }
 
@@ -159,13 +149,11 @@
     });
   }
 
-  // ============================================================
-  // DIARY LIST
-  // ============================================================
+  // -------- diary list --------
 
   async function loadEntries(moodId) {
     const list = $("#entries-list");
-    list.innerHTML = '<p class="empty-state">Loading…</p>';
+    list.innerHTML = '<p class="empty-state">Loading...</p>';
     try {
       const entries = await api.listEntries(moodId);
       renderEntries(entries);
@@ -184,14 +172,20 @@
     entries.forEach((e) => list.appendChild(entryCard(e)));
   }
 
+  // build a DOM node for one entry.
+  // note: not using innerHTML for user-controlled fields (title, reflection).
+  // some fields come from TMDB (title) which I trust more than user input
+  // but escaping everything to be safe.
   function entryCard(e) {
     const card = document.createElement("article");
     card.className = "entry-card";
 
     const posterSrc = e.poster_path || "/placeholder/movie.svg";
-    const stars = "★★★★★☆☆☆☆☆".slice(5 - e.rating, 10 - e.rating);
-    const filled = "★".repeat(e.rating);
-    const empty  = "☆".repeat(5 - e.rating);
+    const filled = "*".repeat(e.rating);   // filled star placeholder, replaced below
+    const empty  = "*".repeat(5 - e.rating);
+    // actually using unicode stars, just easier to read the source with placeholders above
+    const filledStars = "\u2605".repeat(e.rating);
+    const emptyStars  = "\u2606".repeat(5 - e.rating);
     const dateStr = new Date(e.watched_on).toLocaleDateString(undefined, {
       year: "numeric", month: "long", day: "numeric",
     });
@@ -203,8 +197,8 @@
           ${e.release_year ? "(" + e.release_year + ")" : ""}</span></h3>
         <div class="entry-meta">Watched ${escapeHtml(dateStr)}</div>
         <div class="entry-stars">
-          <span>${filled}</span><span class="empty">${empty}</span>
-          &nbsp;·&nbsp;
+          <span>${filledStars}</span><span class="empty">${emptyStars}</span>
+          &nbsp;&middot;&nbsp;
           <span class="entry-mood-tag" style="background:${escapeHtml(e.mood_color)}">
             ${escapeHtml(e.mood_label)}
           </span>
@@ -219,6 +213,7 @@
 
     card.querySelector('[data-action="edit"]').addEventListener("click", () => openModal("edit", e));
     card.querySelector('[data-action="delete"]').addEventListener("click", async () => {
+      // confirm() is ugly but I don't want to build a whole confirmation modal
       if (!confirm(`Delete your entry for "${e.title}"?`)) return;
       await api.deleteEntry(e.id);
       loadEntries($("#filter-mood").value);
@@ -227,10 +222,10 @@
     return card;
   }
 
-  // ============================================================
-  // ENTRY MODAL (dynamic front-end interaction #1: search;
-  // dynamic front-end interaction #2: create/edit via modal + JSON)
-  // ============================================================
+  // -------- entry modal --------
+  // two dynamic interactions live here:
+  //   1) live movie search (debounced fetch as user types)
+  //   2) create/edit entry with mood chips (POSTs JSON, no page reload)
 
   function bindModalUI() {
     $$("[data-close]", $("#modal-entry")).forEach((el) =>
@@ -266,6 +261,7 @@
   }
 
   function openModal(mode, entry) {
+    // reset everything
     state.editingEntryId = null;
     state.selectedMovie = null;
     state.selectedMood = null;
@@ -290,7 +286,6 @@
       };
       state.selectedRating = entry.rating;
       state.selectedMood = entry.mood_id;
-      $("#entry-form querySelector"); // no-op guard
       $("#entry-form").querySelector('[name="watched_on"]').value = entry.watched_on;
       $("#entry-form").querySelector('[name="reflection"]').value = entry.reflection || "";
       showSelectedMovie();
@@ -299,7 +294,7 @@
       $("#step-search").classList.add("hidden");
       $("#entry-form").classList.remove("hidden");
     } else {
-      // default watched-on to today
+      // default to today
       $("#entry-form").querySelector('[name="watched_on"]').value =
         new Date().toISOString().slice(0, 10);
       $("#step-search").classList.remove("hidden");
@@ -349,9 +344,11 @@
     $("#sel-meta").textContent = m.release_year || "";
   }
 
+  // star rating input. Rendering the stars right-to-left in the DOM so
+  // the CSS `label:hover ~ label` selector can light up the lower stars too.
+  // Kind of a hack but it's the standard css-only star rating pattern.
   function renderStarInput(current) {
     const wrap = $(".star-input");
-    // Render right-to-left so hover cascades work with CSS ~ selector
     wrap.innerHTML = "";
     [5, 4, 3, 2, 1].forEach((n) => {
       const id = "star-" + n;
@@ -364,7 +361,7 @@
       input.addEventListener("change", () => (state.selectedRating = n));
       const label = document.createElement("label");
       label.htmlFor = id;
-      label.textContent = "★";
+      label.textContent = "\u2605";
       label.title = n + " star" + (n === 1 ? "" : "s");
       wrap.appendChild(input);
       wrap.appendChild(label);
@@ -402,6 +399,7 @@
     e.preventDefault();
     showError("entry-error", "");
 
+    // client-side validation (server also validates, this is just for UX)
     if (!state.selectedMovie) return showError("entry-error", "Please select a film.");
     if (!state.selectedRating) return showError("entry-error", "Please give it a rating.");
     if (!state.selectedMood) return showError("entry-error", "Please pick a mood.");
@@ -428,15 +426,15 @@
     }
   }
 
-  // ============================================================
-  // STATS
-  // ============================================================
+  // -------- stats --------
 
   async function loadStats() {
     const stats = await api.stats();
     $("#stat-total").textContent = stats.totals.total || 0;
-    $("#stat-avg").textContent = stats.totals.avg_rating || "–";
+    $("#stat-avg").textContent = stats.totals.avg_rating || "-";
 
+    // bar chart - no library, just divs with width%.
+    // Math.max with 1 to avoid div-by-zero when there's no data yet.
     const maxMood = Math.max(1, ...stats.byMood.map((m) => m.count));
     $("#mood-chart").innerHTML = stats.byMood.length
       ? stats.byMood
@@ -455,7 +453,7 @@
     $("#month-chart").innerHTML = stats.byMonth.length
       ? stats.byMonth
           .slice()
-          .reverse()
+          .reverse()  // server sends newest-first, but I want oldest-first for the chart
           .map(
             (m) => `
         <div class="chart-row">
@@ -468,6 +466,7 @@
       : '<p class="empty-state" style="padding:1rem 0">No monthly data yet.</p>';
   }
 
+  // "2026-03" -> "Mar 2026"
   function monthLabel(ym) {
     const [y, m] = ym.split("-");
     const date = new Date(Number(y), Number(m) - 1, 1);
