@@ -17,7 +17,7 @@ Built as the portfolio project for **DLBCSPJWD01 - Project Java and Web Developm
 Needs Node 18 or newer (I'm using the built-in `fetch` on the server).
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/pasfilmit.git
+git clone https://github.com/marsildabako/pasfilmit.git
 cd pasfilmit
 npm install
 cp .env.example .env
