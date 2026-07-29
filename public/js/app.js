@@ -3,8 +3,6 @@
 //
 // No framework - just querySelector and event listeners. Kept everything
 // in one IIFE so I don't pollute the global scope.
-//
-// TODO: split this into smaller files at some point. It's getting long.
 
 (() => {
   // shared state. tried to keep this minimal.
